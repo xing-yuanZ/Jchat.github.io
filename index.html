@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>JChat</title>
+    <title>JChat · 即时聊天</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -13,343 +13,178 @@
         }
 
         body {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f7fb;
+            height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        /* 登录/注册卡片样式 */
-        .auth-container {
-            max-width: 420px;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 32px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            padding: 2rem;
-            backdrop-filter: blur(2px);
-            transition: transform 0.2s;
-        }
-
-        .auth-container h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .auth-container input {
-            width: 100%;
-            padding: 14px 18px;
-            margin-bottom: 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 60px;
-            font-size: 1rem;
-            transition: all 0.2s;
-            background: #f8fafc;
-        }
-
-        .auth-container input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-            background: white;
-        }
-
-        .auth-container button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 60px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            margin-bottom: 12px;
-        }
-
-        .auth-container button:hover {
-            opacity: 0.9;
-        }
-
-        .switch-auth {
-            text-align: center;
-            font-size: 0.9rem;
-            color: #667eea;
-            cursor: pointer;
-            font-weight: 500;
-            margin-top: 8px;
-        }
-
-        .error-msg {
-            background: #fee2e2;
-            color: #b91c1c;
-            padding: 10px;
-            border-radius: 60px;
-            font-size: 0.8rem;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        /* 主应用布局 */
-        .app-container {
-            width: 100%;
-            max-width: 1400px;
-            height: 90vh;
-            background: white;
-            border-radius: 32px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            display: flex;
+            flex-direction: column;
             overflow: hidden;
         }
 
-        /* 侧边栏 */
-        .sidebar {
-            width: 280px;
-            background: #f9fafb;
-            border-right: 1px solid #eef2f6;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            padding: 24px 20px;
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
+        /* 顶部导航栏 */
+        .top-nav {
+            background: white;
             border-bottom: 1px solid #eef2f6;
-        }
-
-        .nav-menu {
-            flex: 1;
-            padding: 20px 12px;
+            padding: 0 24px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
             gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            flex-shrink: 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
 
         .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #4b5563;
+            padding: 16px 20px;
+            font-size: 16px;
             font-weight: 500;
+            color: #5b677b;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 2px solid transparent;
         }
 
         .nav-item:hover {
-            background: #eef2ff;
-            color: #4f46e5;
+            color: #007aff;
         }
 
         .nav-item.active {
-            background: #eef2ff;
-            color: #4f46e5;
-            font-weight: 600;
+            color: #007aff;
+            border-bottom-color: #007aff;
         }
 
-        .logout-btn {
-            margin: 16px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .logout-btn:hover {
-            background: #dc2626;
-        }
-
-        /* 内容区域 */
-        .content-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .content-header {
-            padding: 20px 28px;
-            background: white;
-            border-bottom: 1px solid #eef2f6;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #1f2937;
-        }
-
-        .content-body {
+        /* 主内容区域 */
+        .main-content {
             flex: 1;
             overflow-y: auto;
             padding: 24px 28px;
-            background: #ffffff;
-        }
-
-        /* 聊天界面 */
-        .chat-layout {
-            display: flex;
-            height: 100%;
-            gap: 20px;
-        }
-
-        .friends-sidebar {
-            width: 260px;
-            border-right: 1px solid #eef2f6;
-            overflow-y: auto;
-        }
-
-        .friend-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .friend-item:hover {
-            background: #f3f4f6;
-        }
-
-        .friend-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: #c7d2fe;
-        }
-
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #f9fafb;
-            border-radius: 24px;
-            overflow: hidden;
-        }
-
-        .chat-header-area {
-            padding: 16px 20px;
-            background: white;
-            border-bottom: 1px solid #eef2f6;
-            font-weight: 600;
-        }
-
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .message-bubble {
-            max-width: 70%;
-            padding: 10px 16px;
-            border-radius: 20px;
-            word-wrap: break-word;
-        }
-
-        .message-sent {
-            align-self: flex-end;
-            background: #4f46e5;
-            color: white;
-        }
-
-        .message-received {
-            align-self: flex-start;
-            background: white;
-            border: 1px solid #eef2f6;
-            color: #1f2937;
-        }
-
-        .input-wrapper {
-            padding: 16px;
-            background: white;
-            border-top: 1px solid #eef2f6;
-            display: flex;
-            gap: 12px;
-        }
-
-        #messageInput {
-            flex: 1;
-            padding: 12px 18px;
-            border: 1px solid #e2e8f0;
-            border-radius: 60px;
-            outline: none;
-        }
-
-        #sendBtn {
-            background: #4f46e5;
-            color: white;
-            border: none;
-            padding: 0 24px;
-            border-radius: 60px;
-            cursor: pointer;
-            font-weight: 600;
         }
 
         /* 卡片样式 */
-        .profile-card {
-            background: #f9fafb;
-            border-radius: 24px;
-            padding: 24px;
-            display: flex;
-            gap: 28px;
-            flex-wrap: wrap;
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            transition: 0.2s;
         }
 
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
+        .friend-item, .contact-item, .user-search-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            background: #e9ecef;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        .profile-details {
+        .info {
             flex: 1;
         }
 
-        .profile-name {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 8px;
+        .name {
+            font-weight: 600;
+            font-size: 16px;
         }
 
-        .profile-bio {
-            color: #4b5563;
+        button {
+            background: #007aff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button.danger {
+            background: #ff3b30;
+        }
+
+        .input-group {
             margin: 12px 0;
         }
 
-        /* 表格和按钮 */
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            font-size: 15px;
+            background: #f9fafb;
+        }
+
+        .messages-area {
+            max-height: 55vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 20px;
+            font-size: 15px;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            background: #007aff;
+            color: white;
+        }
+
+        .message.received {
+            align-self: flex-start;
+            background: #e9ecef;
+            color: black;
+        }
+
+        .profile-header {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .profile-avatar-lg {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #ddd;
+            object-fit: cover;
+        }
+
+        h3 {
+            margin: 0 0 12px 0;
+            font-size: 18px;
+        }
+
+        .announcement-banner {
+            background: #fff7e5;
+            border-left: 4px solid #ffc107;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
         }
 
         th, td {
@@ -358,19 +193,15 @@
             border-bottom: 1px solid #eef2f6;
         }
 
-        button {
-            background: #4f46e5;
-            color: white;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin: 4px;
-        }
-
-        button.danger {
-            background: #ef4444;
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .main-content {
+                padding: 16px;
+            }
+            .nav-item {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
         }
 
         .loading {
@@ -384,7 +215,7 @@
 <div id="app"></div>
 
 <script>
-    // ---------- 🔥 请替换成你的 Supabase 真实信息 ----------
+    // ---------- 你的 Supabase 配置（请确保正确） ----------
     const SUPABASE_URL = 'https://cxilodvbdhtxtrldoswl.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_36lHK24HL6drOmuhSTTv8g_w2n0fU5H';
     // -----------------------------------------------------
@@ -394,8 +225,7 @@
 
     let currentUser = null;
     let currentProfile = null;
-    let currentView = 'chat';       // chat, friends, discover, profile, settings, admin, userpage
-    let targetUserId = null;
+    let currentView = 'chat';      // chat, friends, discover, profile, settings, admin
     let currentChatUser = null;
     let messagesSubscription = null;
 
@@ -404,10 +234,9 @@
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
-    // 确保 profile 存在
     async function ensureProfile(user, username) {
-        const { data: existing } = await _supabase.from('public_profiles').select('id').eq('id', user.id).maybeSingle();
-        if (!existing) {
+        const { data } = await _supabase.from('public_profiles').select('id').eq('id', user.id).maybeSingle();
+        if (!data) {
             await _supabase.from('public_profiles').insert({
                 id: user.id,
                 email: user.email,
@@ -419,7 +248,7 @@
         }
     }
 
-    // 主渲染
+    // 渲染整个应用
     async function render() {
         const app = document.getElementById('app');
         if (!currentUser) {
@@ -427,8 +256,7 @@
             attachAuthEvents();
             return;
         }
-
-        // 加载当前用户的完整 profile
+        // 获取最新的 profile
         const { data: profile } = await _supabase.from('public_profiles').select('*').eq('id', currentUser.id).single();
         currentProfile = profile;
 
@@ -436,51 +264,26 @@
         if (currentView === 'chat') mainContent = await renderChatView();
         else if (currentView === 'friends') mainContent = await renderFriendsView();
         else if (currentView === 'discover') mainContent = await renderDiscoverView();
-        else if (currentView === 'profile') mainContent = await renderMyProfileView();
+        else if (currentView === 'profile') mainContent = await renderProfileView();
         else if (currentView === 'settings') mainContent = renderSettingsView();
         else if (currentView === 'admin' && currentProfile?.is_admin) mainContent = await renderAdminView();
-        else if (currentView === 'userpage' && targetUserId) mainContent = await renderUserPage(targetUserId);
-        else mainContent = '<div class="loading">内容加载中...</div>';
 
-        const sidebarHtml = renderSidebar();
+        const topNavHtml = renderTopNav();
         app.innerHTML = `
-            <div class="app-container">
-                <div class="sidebar">
-                    <div class="sidebar-header">JChat</div>
-                    <div class="nav-menu">
-                        <div class="nav-item ${currentView === 'chat' ? 'active' : ''}" data-view="chat">💬 聊天</div>
-                        <div class="nav-item ${currentView === 'friends' ? 'active' : ''}" data-view="friends">👥 好友</div>
-                        <div class="nav-item ${currentView === 'discover' ? 'active' : ''}" data-view="discover">🌟 发现</div>
-                        <div class="nav-item ${currentView === 'profile' ? 'active' : ''}" data-view="profile">😀 我的主页</div>
-                        <div class="nav-item ${currentView === 'settings' ? 'active' : ''}" data-view="settings">⚙️ 设置</div>
-                        ${currentProfile?.is_admin ? `<div class="nav-item ${currentView === 'admin' ? 'active' : ''}" data-view="admin">🔧 管理面板</div>` : ''}
-                    </div>
-                    <button class="logout-btn" id="logout-btn">退出登录</button>
-                </div>
-                <div class="content-area">
-                    <div class="content-header">${getHeaderTitle()}</div>
-                    <div class="content-body" id="content-body">${mainContent}</div>
-                </div>
-            </div>
+            ${topNavHtml}
+            <div class="main-content" id="main-scroll">${mainContent}</div>
         `;
 
-        document.getElementById('logout-btn').onclick = async () => {
-            await _supabase.auth.signOut();
-            currentUser = null;
-            currentProfile = null;
-            if (messagesSubscription) messagesSubscription.unsubscribe();
-            render();
-        };
+        // 绑定导航点击
         document.querySelectorAll('.nav-item').forEach(el => {
             el.addEventListener('click', () => {
                 currentView = el.dataset.view;
-                targetUserId = null;
                 currentChatUser = null;
                 render();
             });
         });
 
-        // 绑定子页面事件
+        // 子页面事件绑定
         if (currentView === 'chat' && currentChatUser) {
             attachChatEvents();
             subscribeToMessages();
@@ -489,96 +292,72 @@
         if (currentView === 'discover') attachDiscoverEvents();
         if (currentView === 'settings') attachSettingsEvents();
         if (currentView === 'admin' && currentProfile?.is_admin) attachAdminEvents();
-        if (currentView === 'userpage') attachUserPageEvents();
     }
 
-    function getHeaderTitle() {
-        const titles = {
-            chat: '聊天',
-            friends: '好友',
-            discover: '发现',
-            profile: '我的主页',
-            settings: '设置',
-            admin: '管理面板',
-            userpage: '用户主页'
-        };
-        return titles[currentView] || 'JChat';
+    function renderTopNav() {
+        const items = [
+            { view: 'chat', label: '💬 聊天' },
+            { view: 'friends', label: '👥 好友' },
+            { view: 'discover', label: '🌟 发现' },
+            { view: 'profile', label: '😀 我的主页' },
+            { view: 'settings', label: '⚙️ 设置' }
+        ];
+        if (currentProfile?.is_admin) items.push({ view: 'admin', label: '🔧 管理面板' });
+        return `
+            <div class="top-nav">
+                ${items.map(item => `
+                    <div class="nav-item ${currentView === item.view ? 'active' : ''}" data-view="${item.view}">${item.label}</div>
+                `).join('')}
+                <div style="margin-left: auto; display: flex; align-items: center;">
+                    <span style="font-size:14px; color:#5b677b;">${escapeHtml(currentProfile?.display_name || '')}</span>
+                    <button id="logout-top" style="background:#ef4444; margin-left:12px; padding:6px 14px;">退出</button>
+                </div>
+            </div>
+        `;
     }
 
-    function renderSidebar() { return ''; }
-
-    // 登录/注册界面
+    // 登录/注册界面（与之前相同）
     function renderAuth() {
         return `
-            <div class="auth-container">
-                <h2>✨ JChat</h2>
-                <div id="auth-error" class="error-msg" style="display:none;"></div>
-                <input type="text" id="username" placeholder="用户名" autocomplete="username">
-                <input type="password" id="password" placeholder="密码" autocomplete="current-password">
-                <button id="auth-submit">登录</button>
-                <div class="switch-auth" id="switch-auth">还没有账号？ 立即注册</div>
+            <div style="display:flex; justify-content:center; align-items:center; min-height:80vh;">
+                <div style="background:white; border-radius:40px; padding:32px; width:100%; max-width:400px;">
+                    <h2 style="text-align:center; margin-bottom:24px;">JChat</h2>
+                    <div id="auth-error" style="color:red; margin-bottom:12px;"></div>
+                    <input type="text" id="username" placeholder="用户名" style="margin-bottom:12px;">
+                    <input type="password" id="password" placeholder="密码" style="margin-bottom:20px;">
+                    <button id="auth-submit" style="width:100%;">登录</button>
+                    <div id="switch-auth" style="text-align:center; margin-top:16px; color:#007aff; cursor:pointer;">没有账号？注册</div>
+                </div>
             </div>
         `;
     }
 
     let isLogin = true;
     function attachAuthEvents() {
-        const submitBtn = document.getElementById('auth-submit');
+        const submit = document.getElementById('auth-submit');
         const switchBtn = document.getElementById('switch-auth');
-        const titleEl = document.querySelector('.auth-container h2');
         const errorDiv = document.getElementById('auth-error');
 
-        function showError(msg) {
-            errorDiv.innerText = msg;
-            errorDiv.style.display = 'block';
-            setTimeout(() => errorDiv.style.display = 'none', 3000);
-        }
-
-        submitBtn.onclick = async () => {
+        async function doAuth() {
+            errorDiv.innerText = '';
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            if (!username || !password) {
-                showError('请填写用户名和密码');
-                return;
-            }
-
+            if (!username || !password) { errorDiv.innerText = '请填写用户名和密码'; return; }
             if (isLogin) {
-                // 登录
-                const { data: profile, error: findErr } = await _supabase
-                    .from('public_profiles')
-                    .select('email')
-                    .eq('display_name', username)
-                    .maybeSingle();
-                if (findErr || !profile) {
-                    showError('用户名不存在');
-                    return;
-                }
+                const { data: profile } = await _supabase.from('public_profiles').select('email').eq('display_name', username).maybeSingle();
+                if (!profile) { errorDiv.innerText = '用户名不存在'; return; }
                 const { error } = await _supabase.auth.signInWithPassword({ email: profile.email, password });
-                if (error) {
-                    showError(error.message);
-                    return;
-                }
+                if (error) { errorDiv.innerText = error.message; return; }
                 const { data: { user } } = await _supabase.auth.getUser();
                 currentUser = user;
                 await ensureProfile(currentUser, username);
                 render();
             } else {
-                // 注册
-                const { data: existing } = await _supabase
-                    .from('public_profiles')
-                    .select('id')
-                    .eq('display_name', username)
-                    .maybeSingle();
-                if (existing) {
-                    showError('用户名已被占用');
-                    return;
-                }
+                const { data: existing } = await _supabase.from('public_profiles').select('id').eq('display_name', username).maybeSingle();
+                if (existing) { errorDiv.innerText = '用户名已存在'; return; }
                 const randomEmail = crypto.randomUUID() + EMAIL_SUFFIX;
                 const { data, error } = await _supabase.auth.signUp({ email: randomEmail, password });
-                if (error) {
-                    showError(error.message);
-                    return;
-                }
+                if (error) { errorDiv.innerText = error.message; return; }
                 if (data.user) {
                     currentUser = data.user;
                     await _supabase.from('public_profiles').insert({
@@ -591,107 +370,412 @@
                     });
                     render();
                 } else {
-                    showError('注册失败，请重试');
+                    errorDiv.innerText = '注册失败，请重试';
                 }
             }
-        };
-
+        }
+        submit.onclick = doAuth;
         switchBtn.onclick = () => {
             isLogin = !isLogin;
-            titleEl.innerText = isLogin ? '✨ JChat' : '📝 注册 JChat';
-            submitBtn.innerText = isLogin ? '登录' : '注册';
-            switchBtn.innerText = isLogin ? '还没有账号？ 立即注册' : '已有账号？ 去登录';
-            errorDiv.style.display = 'none';
+            submit.innerText = isLogin ? '登录' : '注册';
+            switchBtn.innerText = isLogin ? '没有账号？注册' : '已有账号？登录';
+            errorDiv.innerText = '';
         };
+        // 退出按钮在渲染后绑定
     }
 
-    // 我的主页视图
-    async function renderMyProfileView() {
-        if (!currentProfile) return '<div class="loading">加载中...</div>';
-        return `
-            <div class="profile-card">
-                <img class="profile-avatar" src="${currentProfile.avatar_url || 'https://via.placeholder.com/120'}" onerror="this.src='https://via.placeholder.com/120'">
-                <div class="profile-details">
-                    <div class="profile-name">${escapeHtml(currentProfile.display_name)}</div>
-                    <div class="profile-bio">${escapeHtml(currentProfile.bio || '这个人很懒，什么都没写')}</div>
-                    <div>📅 加入时间: ${new Date(currentProfile.created_at).toLocaleDateString()}</div>
-                    <div>🔖 身份: ${currentProfile.is_admin ? '管理员' : '普通用户'}</div>
-                    ${currentProfile.is_muted ? '<div>⛔ 当前处于禁言状态</div>' : ''}
-                </div>
-            </div>
-        `;
+    // 退出逻辑在全局渲染后绑定
+    function bindLogout() {
+        const logoutBtn = document.getElementById('logout-top');
+        if (logoutBtn) {
+            logoutBtn.onclick = async () => {
+                await _supabase.auth.signOut();
+                currentUser = null;
+                currentProfile = null;
+                if (messagesSubscription) messagesSubscription.unsubscribe();
+                render();
+            };
+        }
     }
 
-    // 其他用户主页
-    async function renderUserPage(userId) {
-        const { data: userProfile } = await _supabase.from('public_profiles').select('*').eq('id', userId).single();
-        if (!userProfile) return '<div class="loading">用户不存在或已删除</div>';
-        // 判断好友状态
-        const { data: friendship } = await _supabase
+    // 聊天视图
+    async function renderChatView() {
+        // 获取好友列表（accepted）
+        const { data: friendships } = await _supabase
             .from('friendships')
-            .select('status')
-            .or(`and(user_id.eq.${currentUser.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${currentUser.id})`)
-            .maybeSingle();
-        const isFriend = friendship?.status === 'accepted';
-        const isPending = friendship?.status === 'pending';
+            .select('user_id, friend_id')
+            .or(`user_id.eq.${currentUser.id},friend_id.eq.${currentUser.id}`)
+            .eq('status', 'accepted');
+        let friendIds = [];
+        friendships?.forEach(f => {
+            if (f.user_id === currentUser.id) friendIds.push(f.friend_id);
+            else friendIds.push(f.user_id);
+        });
+        let friends = [];
+        if (friendIds.length) {
+            const { data } = await _supabase.from('public_profiles').select('id, display_name, avatar_url').in('id', friendIds);
+            friends = data || [];
+        }
+        const friendListHtml = friends.map(f => `
+            <div class="contact-item" data-user-id="${f.id}" data-name="${escapeHtml(f.display_name)}">
+                <img class="avatar" src="${f.avatar_url || 'https://via.placeholder.com/48'}" onerror="this.src='https://via.placeholder.com/48'">
+                <div class="info"><div class="name">${escapeHtml(f.display_name)}</div></div>
+            </div>
+        `).join('');
+        const chatAreaHtml = currentChatUser ? await renderChatArea() : '<div class="card" style="text-align:center; color:#888;">选择一个好友开始聊天</div>';
         return `
-            <div class="profile-card">
-                <img class="profile-avatar" src="${userProfile.avatar_url || 'https://via.placeholder.com/120'}" onerror="this.src='https://via.placeholder.com/120'">
-                <div class="profile-details">
-                    <div class="profile-name">${escapeHtml(userProfile.display_name)}</div>
-                    <div class="profile-bio">${escapeHtml(userProfile.bio || '这个人很懒')}</div>
-                    <div>📅 加入时间: ${new Date(userProfile.created_at).toLocaleDateString()}</div>
-                    <div id="friend-action">
-                        ${!isFriend && !isPending ? '<button id="add-friend-from-page">➕ 添加好友</button>' : (isPending ? '<span>⏳ 好友申请已发送</span>' : '<span>✅ 你们已经是好友</span>')}
-                    </div>
+            <div style="display:flex; flex-direction:column; gap:20px;">
+                <div class="card">
+                    <div style="font-weight:600; margin-bottom:12px;">好友列表</div>
+                    ${friendListHtml || '<div style="padding:12px; text-align:center;">暂无好友，请去“发现”添加</div>'}
+                </div>
+                ${chatAreaHtml}
+            </div>
+        `;
+    }
+
+    async function renderChatArea() {
+        if (!currentChatUser) return '';
+        const { data: messages } = await _supabase
+            .from('messages')
+            .select('*')
+            .or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${currentChatUser.id}),and(from_user_id.eq.${currentChatUser.id},to_user_id.eq.${currentUser.id})`)
+            .order('created_at', { ascending: true });
+        const msgsHtml = messages?.map(m => `
+            <div class="message ${m.from_user_id === currentUser.id ? 'sent' : 'received'}">
+                ${escapeHtml(m.content)}
+            </div>
+        `).join('') || '';
+        return `
+            <div class="card">
+                <div style="font-weight:600; margin-bottom:16px;">与 ${escapeHtml(currentChatUser.display_name)} 的聊天</div>
+                <div class="messages-area" id="chat-messages-area">${msgsHtml}</div>
+                <div style="display:flex; gap:12px;">
+                    <input type="text" id="chat-input" placeholder="输入消息..." style="flex:1;">
+                    <button id="chat-send">发送</button>
                 </div>
             </div>
         `;
     }
 
-    function attachUserPageEvents() {
-        const addBtn = document.getElementById('add-friend-from-page');
-        if (addBtn && targetUserId) {
-            addBtn.onclick = async () => {
-                await _supabase.from('friendships').insert({
-                    user_id: currentUser.id,
-                    friend_id: targetUserId,
-                    status: 'pending'
+    function attachChatEvents() {
+        document.querySelectorAll('.contact-item').forEach(el => {
+            el.onclick = () => {
+                const userId = el.dataset.userId;
+                const name = el.dataset.name;
+                currentChatUser = { id: userId, display_name: name };
+                render();
+            };
+        });
+        const sendBtn = document.getElementById('chat-send');
+        const input = document.getElementById('chat-input');
+        if (sendBtn && input) {
+            const send = async () => {
+                const content = input.value.trim();
+                if (!content || !currentChatUser) return;
+                if (currentProfile?.is_muted) { alert('你已被禁言'); return; }
+                await _supabase.from('messages').insert({
+                    from_user_id: currentUser.id,
+                    to_user_id: currentChatUser.id,
+                    content
                 });
+                input.value = '';
+                const area = document.getElementById('chat-messages-area');
+                if (area) {
+                    const div = document.createElement('div');
+                    div.className = 'message sent';
+                    div.innerText = content;
+                    area.appendChild(div);
+                    area.scrollTop = area.scrollHeight;
+                }
+            };
+            sendBtn.onclick = send;
+            input.onkeypress = e => { if (e.key === 'Enter') send(); };
+        }
+    }
+
+    function subscribeToMessages() {
+        if (messagesSubscription) messagesSubscription.unsubscribe();
+        messagesSubscription = _supabase
+            .channel('new-message')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `to_user_id=eq.${currentUser.id}` }, payload => {
+                if (currentChatUser && payload.new.from_user_id === currentChatUser.id) {
+                    const area = document.getElementById('chat-messages-area');
+                    if (area) {
+                        const div = document.createElement('div');
+                        div.className = 'message received';
+                        div.innerText = payload.new.content;
+                        area.appendChild(div);
+                        area.scrollTop = area.scrollHeight;
+                    }
+                }
+            })
+            .subscribe();
+    }
+
+    // 好友视图
+    async function renderFriendsView() {
+        // 待处理请求
+        const { data: requests } = await _supabase.from('friendships').select('id, user_id, status').eq('friend_id', currentUser.id).eq('status', 'pending');
+        let requestUsers = [];
+        if (requests?.length) {
+            const ids = requests.map(r => r.user_id);
+            const { data } = await _supabase.from('public_profiles').select('id, display_name').in('id', ids);
+            requestUsers = data || [];
+        }
+        const requestsHtml = requestUsers.map(r => `
+            <div class="friend-item" data-request-id="${requests.find(req => req.user_id === r.id).id}" data-user-id="${r.id}">
+                <div class="info"><div class="name">${escapeHtml(r.display_name)} 请求添加好友</div></div>
+                <button class="accept-friend">接受</button>
+                <button class="reject-friend" style="background:#aaa;">拒绝</button>
+            </div>
+        `).join('');
+        // 已有好友
+        const { data: friendships } = await _supabase.from('friendships').select('user_id, friend_id').or(`user_id.eq.${currentUser.id},friend_id.eq.${currentUser.id}`).eq('status', 'accepted');
+        let fids = [];
+        friendships?.forEach(f => {
+            if (f.user_id === currentUser.id) fids.push(f.friend_id);
+            else fids.push(f.user_id);
+        });
+        let friends = [];
+        if (fids.length) {
+            const { data } = await _supabase.from('public_profiles').select('id, display_name, avatar_url').in('id', fids);
+            friends = data || [];
+        }
+        const friendsHtml = friends.map(f => `
+            <div class="friend-item">
+                <img class="avatar" src="${f.avatar_url || 'https://via.placeholder.com/48'}">
+                <div class="info"><div class="name">${escapeHtml(f.display_name)}</div></div>
+            </div>
+        `).join('');
+        return `
+            <div class="card"><h3>好友请求</h3>${requestsHtml || '<div>暂无</div>'}</div>
+            <div class="card"><h3>我的好友</h3>${friendsHtml || '<div>暂无好友</div>'}</div>
+            <div class="card"><h3>添加好友</h3><input id="add-friend-name" placeholder="输入用户名"><button id="search-add">搜索并添加</button></div>
+        `;
+    }
+
+    function attachFriendEvents() {
+        document.querySelectorAll('.accept-friend').forEach(btn => {
+            btn.onclick = async () => {
+                const requestId = btn.closest('.friend-item').dataset.requestId;
+                await _supabase.from('friendships').update({ status: 'accepted' }).eq('id', requestId);
+                render();
+            };
+        });
+        document.querySelectorAll('.reject-friend').forEach(btn => {
+            btn.onclick = async () => {
+                const requestId = btn.closest('.friend-item').dataset.requestId;
+                await _supabase.from('friendships').delete().eq('id', requestId);
+                render();
+            };
+        });
+        const searchBtn = document.getElementById('search-add');
+        if (searchBtn) {
+            searchBtn.onclick = async () => {
+                const username = document.getElementById('add-friend-name').value.trim();
+                if (!username) return;
+                const { data: user } = await _supabase.from('public_profiles').select('id').eq('display_name', username).maybeSingle();
+                if (!user) { alert('用户不存在'); return; }
+                if (user.id === currentUser.id) { alert('不能添加自己'); return; }
+                await _supabase.from('friendships').insert({ user_id: currentUser.id, friend_id: user.id, status: 'pending' });
                 alert('好友申请已发送');
                 render();
             };
         }
     }
 
-    // 其他视图（聊天、好友、发现、设置、管理员）由于代码太长，保留之前实现，但需要确保函数定义存在。
-    // 以下是必须保留的辅助函数占位，实际使用时请确保完整。
+    // 发现视图
+    async function renderDiscoverView() {
+        const { data: ann } = await _supabase.from('announcements').select('content').order('created_at', { ascending: false }).limit(1);
+        const announcement = ann?.[0]?.content || '暂无公告';
+        return `
+            <div class="announcement-banner">📢 ${escapeHtml(announcement)}</div>
+            <div class="card"><h3>🔍 查找用户</h3><input id="search-user" placeholder="用户名"><button id="do-search">搜索</button><div id="search-results" style="margin-top:16px;"></div></div>
+        `;
+    }
 
-    async function renderChatView() { /* 复用之前完整代码，为避免过长省略，但确保存在 */ return '<div class="loading">聊天功能加载中...</div>'; }
-    async function renderFriendsView() { return '<div class="loading">好友功能加载中...</div>'; }
-    async function renderDiscoverView() { return '<div class="loading">发现功能加载中...</div>'; }
-    function renderSettingsView() { return '<div class="loading">设置功能加载中...</div>'; }
-    async function renderAdminView() { return '<div class="loading">管理面板加载中...</div>'; }
-    function attachChatEvents() {}
-    function subscribeToMessages() {}
-    function attachFriendEvents() {}
-    function attachDiscoverEvents() {}
-    function attachSettingsEvents() {}
-    function attachAdminEvents() {}
+    function attachDiscoverEvents() {
+        const searchBtn = document.getElementById('do-search');
+        if (searchBtn) {
+            searchBtn.onclick = async () => {
+                const keyword = document.getElementById('search-user').value.trim();
+                if (!keyword) return;
+                const { data: users } = await _supabase.from('public_profiles').select('id, display_name, avatar_url').ilike('display_name', `%${keyword}%`).neq('id', currentUser.id);
+                const container = document.getElementById('search-results');
+                if (!users?.length) { container.innerHTML = '<div>未找到用户</div>'; return; }
+                container.innerHTML = users.map(u => `
+                    <div class="user-search-item" data-id="${u.id}">
+                        <img class="avatar" src="${u.avatar_url || 'https://via.placeholder.com/48'}">
+                        <div class="info">${escapeHtml(u.display_name)}</div>
+                        <button class="add-from-search">➕ 加好友</button>
+                        <button class="view-profile">👤 主页</button>
+                    </div>
+                `).join('');
+                document.querySelectorAll('.add-from-search').forEach(btn => {
+                    btn.onclick = async () => {
+                        const userId = btn.closest('.user-search-item').dataset.id;
+                        await _supabase.from('friendships').insert({ user_id: currentUser.id, friend_id: userId, status: 'pending' });
+                        alert('已发送好友申请');
+                    };
+                });
+                document.querySelectorAll('.view-profile').forEach(btn => {
+                    btn.onclick = () => {
+                        const userId = btn.closest('.user-search-item').dataset.id;
+                        alert('查看用户主页功能即将完善，可通过“我的主页”查看自己');
+                    };
+                });
+            };
+        }
+    }
 
-    // 由于完整代码行数限制，以上函数需要将之前正常工作的版本粘贴进来。这里仅示意结构。
-    // 实际使用时，我会提供完整可运行版本。
+    // 我的主页
+    async function renderProfileView() {
+        if (!currentProfile) return '<div class="loading">加载中</div>';
+        return `
+            <div class="card">
+                <div class="profile-header">
+                    <img class="profile-avatar-lg" src="${currentProfile.avatar_url || 'https://via.placeholder.com/100'}" onerror="this.src='https://via.placeholder.com/100'">
+                    <div>
+                        <div class="name" style="font-size:26px;">${escapeHtml(currentProfile.display_name)}</div>
+                        <div style="color:#5b677b;">${currentProfile.is_admin ? '管理员' : '普通用户'}</div>
+                    </div>
+                </div>
+                <div><strong>📝 简介</strong><br>${escapeHtml(currentProfile.bio || '这个人很懒，什么都没写')}</div>
+                <div style="margin-top:12px;"><strong>📅 加入时间</strong><br>${new Date(currentProfile.created_at).toLocaleDateString()}</div>
+                ${currentProfile.is_muted ? '<div style="margin-top:12px; color:red;">⛔ 当前处于禁言状态</div>' : ''}
+            </div>
+        `;
+    }
 
-    // 检查登录状态
+    // 设置页面
+    function renderSettingsView() {
+        return `
+            <div class="card"><h3>更改昵称</h3><input id="new-name" value="${escapeHtml(currentProfile?.display_name || '')}" placeholder="新昵称"><button id="update-name">保存</button></div>
+            <div class="card"><h3>修改密码</h3><input type="password" id="old-pwd" placeholder="当前密码"><input type="password" id="new-pwd" placeholder="新密码"><button id="update-pwd">更新密码</button></div>
+            <div class="card"><h3>个人简介</h3><textarea id="bio-text" rows="2">${escapeHtml(currentProfile?.bio || '')}</textarea><button id="update-bio">保存简介</button></div>
+            <div class="card"><h3>上传头像</h3><input type="file" id="avatar-file" accept="image/*"><button id="upload-avatar">上传</button></div>
+            <div class="card"><h3>危险区域</h3><button id="delete-account" class="danger">永久删除账户</button></div>
+        `;
+    }
+
+    function attachSettingsEvents() {
+        document.getElementById('update-name')?.addEventListener('click', async () => {
+            const newName = document.getElementById('new-name').value.trim();
+            if (!newName) return;
+            await _supabase.from('public_profiles').update({ display_name: newName }).eq('id', currentUser.id);
+            alert('昵称已更新');
+            render();
+        });
+        document.getElementById('update-pwd')?.addEventListener('click', async () => {
+            const old = document.getElementById('old-pwd').value;
+            const newPwd = document.getElementById('new-pwd').value;
+            if (!old || !newPwd) return;
+            const { error } = await _supabase.auth.updateUser({ password: newPwd });
+            if (error) alert(error.message);
+            else alert('密码已修改，请重新登录');
+        });
+        document.getElementById('update-bio')?.addEventListener('click', async () => {
+            const bio = document.getElementById('bio-text').value;
+            await _supabase.from('public_profiles').update({ bio }).eq('id', currentUser.id);
+            alert('简介已更新');
+            render();
+        });
+        document.getElementById('upload-avatar')?.addEventListener('click', async () => {
+            const file = document.getElementById('avatar-file').files[0];
+            if (!file) return;
+            const ext = file.name.split('.').pop();
+            const path = `${currentUser.id}/${Date.now()}.${ext}`;
+            const { error: upErr } = await _supabase.storage.from('avatars').upload(path, file);
+            if (upErr) { alert(upErr.message); return; }
+            const { data: { publicUrl } } = _supabase.storage.from('avatars').getPublicUrl(path);
+            await _supabase.from('public_profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
+            alert('头像已更新');
+            render();
+        });
+        document.getElementById('delete-account')?.addEventListener('click', async () => {
+            if (!confirm('永久删除所有数据？不可恢复！')) return;
+            await _supabase.from('public_profiles').update({ deleted_at: new Date().toISOString() }).eq('id', currentUser.id);
+            await _supabase.auth.signOut();
+            currentUser = null;
+            render();
+        });
+    }
+
+    // 管理员面板
+    async function renderAdminView() {
+        const { data: users } = await _supabase.from('public_profiles').select('*').is('deleted_at', null);
+        const { data: ann } = await _supabase.from('announcements').select('content').order('created_at', { ascending: false }).limit(1);
+        const currentAnn = ann?.[0]?.content || '';
+        return `
+            <div class="card"><h3>编辑公告</h3><textarea id="admin-announcement" rows="2">${escapeHtml(currentAnn)}</textarea><button id="save-announcement">保存公告</button></div>
+            <div class="card"><h3>用户管理</h3><table style="width:100%"><tr><th>用户名</th><th>管理员</th><th>禁言</th><th>操作</th></tr>
+            ${users?.map(u => `
+                <tr>
+                    <td>${escapeHtml(u.display_name)}</td>
+                    <td>${u.is_admin ? '是' : `<button class="set-admin" data-id="${u.id}">设为管理员</button>`}</td>
+                    <td>${u.is_muted ? '已禁言' : `<button class="toggle-mute" data-id="${u.id}">禁言</button>`}</td>
+                    <td><button class="admin-del" data-id="${u.id}">删除</button></td>
+                </tr>
+            `).join('')}</table></div>
+            <div class="card"><h3>创建新用户</h3><input id="new-admin-name" placeholder="用户名"><input id="new-admin-pwd" placeholder="密码"><button id="admin-create-user">创建</button></div>
+        `;
+    }
+
+    function attachAdminEvents() {
+        document.getElementById('save-announcement')?.addEventListener('click', async () => {
+            const content = document.getElementById('admin-announcement').value;
+            if (!content) return;
+            await _supabase.from('announcements').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+            await _supabase.from('announcements').insert({ content, created_by: currentUser.id });
+            alert('公告已更新');
+            render();
+        });
+        document.querySelectorAll('.set-admin').forEach(btn => {
+            btn.onclick = async () => { await _supabase.from('public_profiles').update({ is_admin: true }).eq('id', btn.dataset.id); render(); };
+        });
+        document.querySelectorAll('.toggle-mute').forEach(btn => {
+            btn.onclick = async () => { await _supabase.from('public_profiles').update({ is_muted: true }).eq('id', btn.dataset.id); render(); };
+        });
+        document.querySelectorAll('.admin-del').forEach(btn => {
+            btn.onclick = async () => { await _supabase.from('public_profiles').update({ deleted_at: new Date().toISOString() }).eq('id', btn.dataset.id); render(); };
+        });
+        document.getElementById('admin-create-user')?.addEventListener('click', async () => {
+            const username = document.getElementById('new-admin-name').value.trim();
+            const pwd = document.getElementById('new-admin-pwd').value;
+            if (!username || !pwd) return;
+            const randomEmail = crypto.randomUUID() + EMAIL_SUFFIX;
+            const { data, error } = await _supabase.auth.signUp({ email: randomEmail, password: pwd });
+            if (error) { alert(error.message); return; }
+            if (data.user) {
+                await _supabase.from('public_profiles').insert({ id: data.user.id, email: randomEmail, display_name: username });
+                alert('创建成功');
+                render();
+            }
+        });
+    }
+
     async function checkSession() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (session?.user) {
             currentUser = session.user;
             const { data: profile } = await _supabase.from('public_profiles').select('display_name').eq('id', currentUser.id).maybeSingle();
-            const username = profile?.display_name || 'user';
-            await ensureProfile(currentUser, username);
+            await ensureProfile(currentUser, profile?.display_name || 'user');
         }
         render();
+        // 确保退出按钮在渲染后绑定（因为退出按钮在top-nav中，而top-nav在render中生成）
+        setTimeout(() => {
+            const logoutBtn = document.getElementById('logout-top');
+            if (logoutBtn) {
+                logoutBtn.onclick = async () => {
+                    await _supabase.auth.signOut();
+                    currentUser = null;
+                    currentProfile = null;
+                    if (messagesSubscription) messagesSubscription.unsubscribe();
+                    render();
+                };
+            }
+        }, 100);
     }
     checkSession();
 </script>
