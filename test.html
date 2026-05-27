@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head><title>Supabase 修复测试</title></head>
+<body>
+<pre id="log"></pre>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // 请确认这里的 URL 和密钥完全正确
+    const SUPABASE_URL = 'https://cxilodvbdhtxtrldoswl.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_36lHK24HL6drOmuhSTTv8g_w2n0fU5H';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const log = msg => document.getElementById('log').innerText += msg + '\n';
+
+    (async () => {
+        log('1. 测试查询 public_profiles 表（无需登录）...');
+        const { data, error } = await _supabase.from('public_profiles').select('count', { count: 'exact', head: true });
+        if (error) {
+            log('❌ 查询失败: ' + error.message);
+            log('   如果错误包含 "row-level security"，说明 RLS 策略不正确。');
+        } else {
+            log('✅ 查询成功！当前共有 ' + data.length + ' 条记录（或 count=' + JSON.stringify(data) + '）');
+        }
+
+        log('2. 尝试注册一个新用户（用户名 test123，密码 123456）...');
+        const username = 'test123';
+        const password = '123456';
+        const { data: existing } = await _supabase.from('public_profiles').select('id').eq('display_name', username).maybeSingle();
+        if (existing) {
+            log('⚠️ 用户名 test123 已存在，跳过注册测试。');
+        } else {
+            const randomEmail = crypto.randomUUID() + '@jchat.local';
+            const { data: signUpData, error: signUpError } = await _supabase.auth.signUp({ email: randomEmail, password });
+            if (signUpError) {
+                log('❌ 注册失败: ' + signUpError.message);
+            } else {
+                log('✅ 注册成功，用户ID: ' + signUpData.user.id);
+                // 尝试插入 profile
+                const { error: insertError } = await _supabase.from('public_profiles').insert({
+                    id: signUpData.user.id,
+                    email: randomEmail,
+                    display_name: username
+                });
+                if (insertError) {
+                    log('❌ 插入 profile 失败: ' + insertError.message);
+                } else {
+                    log('✅ profile 插入成功！');
+                }
+            }
+        }
+    })();
+</script>
+</body>
+</html>
