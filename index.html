@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>JChat</title>
+    <title>JChat - 电脑版</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -114,16 +114,18 @@
             color: white;
             cursor: pointer;
         }
-        /* 内容区域 */
+        /* 内容区域 - 聊天视图需要完全填充 */
         .main-content {
             flex: 1;
-            overflow-y: auto;
+            overflow: hidden;  /* 改为 hidden，内部滚动由 chat-layout 处理 */
             background: #fff;
+            padding: 0;        /* 清除内边距，聊天才能全屏 */
         }
         /* 聊天布局 (电脑微信样式) */
         .chat-layout {
             display: flex;
             height: 100%;
+            width: 100%;
         }
         .chat-sidebar {
             width: 280px;
@@ -131,6 +133,7 @@
             border-right: 1px solid #eef2f6;
             display: flex;
             flex-direction: column;
+            flex-shrink: 0;
         }
         .chat-sidebar-header {
             padding: 16px 20px;
@@ -182,6 +185,7 @@
             display: flex;
             flex-direction: column;
             background: white;
+            overflow: hidden;
         }
         .chat-header {
             padding: 16px 24px;
@@ -189,6 +193,7 @@
             border-bottom: 1px solid #eef2f6;
             font-weight: 600;
             font-size: 18px;
+            flex-shrink: 0;
         }
         .messages-container {
             flex: 1;
@@ -221,6 +226,7 @@
             border-top: 1px solid #eef2f6;
             display: flex;
             gap: 12px;
+            flex-shrink: 0;
         }
         #chat-input {
             flex: 1;
@@ -237,7 +243,7 @@
             color: white;
             cursor: pointer;
         }
-        /* 其他页面卡片样式 */
+        /* 其他页面卡片样式（非聊天视图） */
         .card {
             background: white;
             border-radius: 16px;
@@ -518,9 +524,9 @@
         }
     }
 
-    // ========== 聊天视图（电脑微信样式） ==========
+    // ========== 聊天视图（电脑微信样式，全屏） ==========
     async function renderChatView() {
-        // 返回聊天布局的 HTML，事件在 attachChatEvents 中绑定
+        // 返回聊天布局的 HTML，没有外层边距，直接撑满
         return `
             <div class="chat-layout">
                 <div class="chat-sidebar">
@@ -552,7 +558,7 @@
                 .from('public_profiles')
                 .select('id, display_name')
                 .in('id', friendIds)
-                .is('deleted_at', null);   // 只显示未被删除的用户
+                .is('deleted_at', null);
             friends = data || [];
         }
         const contactList = document.getElementById('contact-list');
@@ -634,7 +640,7 @@
             const container = document.getElementById('messages-container');
             if (container) container.scrollTop = container.scrollHeight;
         }
-        // 绑定发送事件（在 attachChatEvents 中也会做，但这里确保）
+        // 绑定发送事件
         const sendBtn = document.getElementById('chat-send');
         const input = document.getElementById('chat-input');
         if (sendBtn && input) {
@@ -663,14 +669,14 @@
     }
 
     function attachChatEvents() {
-        // 因为聊天视图是动态生成的，需要等待 DOM 渲染完成后加载联系人
+        // 等待 DOM 渲染完成后加载联系人
         setTimeout(() => {
             loadContactsAndChat();
         }, 100);
     }
 
     function subscribeMessages() {
-        // 已经在上面的 loadContactsAndChat 中订阅，这里留空
+        // 已经在 loadContactsAndChat 中订阅
     }
 
     // ========== 主页 ==========
