@@ -6,20 +6,20 @@
     <title>JChat - 电脑版</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
+        /* 基础重置和高度控制 */
+        *, *::before, *::after {
             box-sizing: border-box;
         }
-        html, body {
+        html, body, #root {
             height: 100%;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: #f5f7fb;
         }
-        /* 登录页面 */
         .auth-page {
             height: 100%;
             display: flex;
@@ -72,13 +72,14 @@
             text-align: center;
             margin-bottom: 16px;
         }
-        /* 主应用布局 - 使用 Grid 确保高度 */
+        /* 主应用容器 */
         .app-root {
-            height: 100%;
             display: flex;
             flex-direction: column;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
         }
-        /* 顶部导航栏 */
         .top-nav {
             background: white;
             border-bottom: 1px solid #eef2f6;
@@ -116,22 +117,21 @@
             color: white;
             cursor: pointer;
         }
-        /* 内容区域 - 占满剩余高度 */
         .main-content {
             flex: 1;
-            overflow: hidden;  /* 防止溢出 */
+            overflow: hidden;
             background: #fff;
             display: flex;
             flex-direction: column;
         }
-        /* 聊天布局 - 使用 Grid 左右分栏 */
+        /* 聊天布局 - Grid 固定左右 */
         .chat-layout {
             display: grid;
             grid-template-columns: 280px 1fr;
             height: 100%;
             width: 100%;
+            overflow: hidden;
         }
-        /* 左侧好友列表 */
         .chat-sidebar {
             background: #f9fafb;
             border-right: 1px solid #eef2f6;
@@ -157,7 +157,6 @@
             gap: 12px;
             padding: 12px 20px;
             cursor: pointer;
-            transition: background 0.2s;
             border-bottom: 1px solid #f0f0f0;
         }
         .contact-item:hover {
@@ -186,7 +185,7 @@
             font-weight: 500;
             font-size: 15px;
         }
-        /* 右侧聊天区域 */
+        /* 右侧聊天区域 - 采用 flex 布局，高度 100% */
         .chat-area {
             background: white;
             display: flex;
@@ -526,7 +525,7 @@
         }
     }
 
-    // ========== 聊天视图 ==========
+    // ========== 聊天视图（结构不变，只替换右侧内容） ==========
     async function renderChatView() {
         return `
             <div class="chat-layout">
@@ -535,6 +534,7 @@
                     <div class="contact-list" id="contact-list"></div>
                 </div>
                 <div class="chat-area" id="chat-area">
+                    <!-- 默认占位符，之后会替换为带 header、messages-container、input-area 的结构 -->
                     <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">选择一个好友开始聊天</div>
                 </div>
             </div>
@@ -542,6 +542,7 @@
     }
 
     async function loadContactsAndChat() {
+        // 加载好友列表
         const { data: friendships } = await _supabase
             .from('friendships')
             .select('user_id, friend_id')
@@ -573,6 +574,7 @@
             `).join('') || '<div style="padding:20px;text-align:center;">暂无好友，请去“好友”页面添加</div>';
         }
 
+        // 绑定点击事件
         document.querySelectorAll('.contact-item').forEach(el => {
             el.addEventListener('click', async () => {
                 const userId = el.dataset.userId;
@@ -584,15 +586,19 @@
             });
         });
 
+        // 如果已有当前聊天对象，直接渲染内容
         if (currentChatUser) {
             const activeEl = Array.from(document.querySelectorAll('.contact-item')).find(el => el.dataset.userId === currentChatUser.id);
             if (activeEl) activeEl.classList.add('active');
             await renderChatAreaContent();
         } else {
             const chatArea = document.getElementById('chat-area');
-            if (chatArea) chatArea.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">选择一个好友开始聊天</div>';
+            if (chatArea) {
+                chatArea.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">选择一个好友开始聊天</div>';
+            }
         }
 
+        // 实时消息订阅
         if (messagesSub) messagesSub.unsubscribe();
         messagesSub = _supabase
             .channel('new-msg')
@@ -611,6 +617,7 @@
             .subscribe();
     }
 
+    // 重点：动态替换右侧区域内容时，必须保证 .chat-area 内部仍然是 flex 结构，而不是被完全替换成普通 div
     async function renderChatAreaContent() {
         if (!currentChatUser) return;
         const { data: messages } = await _supabase
@@ -621,7 +628,9 @@
         const msgsHtml = messages?.map(m => `
             <div class="message ${m.from_user_id === currentUser.id ? 'sent' : 'received'}">${escapeHtml(m.content)}</div>
         `).join('') || '<div style="text-align:center;color:#999;">暂无消息</div>';
-        const chatHtml = `
+        
+        // 构建完整的聊天区域内部结构（包含 header, messages-container, input-area）
+        const chatAreaHtml = `
             <div class="chat-header">${escapeHtml(currentChatUser.display_name)}</div>
             <div class="messages-container" id="messages-container">${msgsHtml}</div>
             <div class="input-area">
@@ -631,10 +640,14 @@
         `;
         const chatArea = document.getElementById('chat-area');
         if (chatArea) {
-            chatArea.innerHTML = chatHtml;
+            // 替换内部内容，但保留 .chat-area 本身的类名和样式
+            chatArea.innerHTML = chatAreaHtml;
+            // 滚动到底部
             const container = document.getElementById('messages-container');
             if (container) container.scrollTop = container.scrollHeight;
         }
+
+        // 绑定发送事件
         const sendBtn = document.getElementById('chat-send');
         const input = document.getElementById('chat-input');
         if (sendBtn && input) {
@@ -670,14 +683,13 @@
 
     function subscribeMessages() { }
 
-    // ========== 主页 ==========
+    // ========== 其他页面函数（与之前一致，确保完整） ==========
     async function renderHome() {
         const { data: ann } = await _supabase.from('announcements').select('content').order('created_at', { ascending: false }).limit(1);
         const announcement = ann?.[0]?.content || '欢迎使用 JChat！';
         return `<div class="card"><h3>📢 公告</h3><p>${escapeHtml(announcement)}</p></div>`;
     }
 
-    // ========== 好友页面 ==========
     async function renderFriends() {
         const { data: requests } = await _supabase.from('friendships').select('id, user_id').eq('friend_id', currentUser.id).eq('status', 'pending');
         let requestUsers = [];
@@ -742,7 +754,6 @@
         }
     }
 
-    // ========== 我的主页 ==========
     async function renderMyProfile() {
         return `
             <div class="card">
@@ -760,7 +771,6 @@
         `;
     }
 
-    // ========== 设置 ==========
     function renderSettings() {
         return `
             <div class="card"><h3>更改昵称</h3><input id="new-name" value="${escapeHtml(currentProfile.display_name)}"><button id="update-name">保存</button></div>
@@ -825,7 +835,6 @@
         });
     }
 
-    // ========== 管理面板 ==========
     async function renderAdmin() {
         const { data: users } = await _supabase.from('public_profiles').select('*').is('deleted_at', null);
         const { data: ann } = await _supabase.from('announcements').select('content').order('created_at', { ascending: false }).limit(1);
