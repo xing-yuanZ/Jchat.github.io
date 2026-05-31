@@ -11,18 +11,14 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         html, body, #root {
             height: 100%;
             overflow: hidden;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: #f5f7fb;
         }
-
-        /* 登录页 */
         .auth-page {
             height: 100%;
             display: flex;
@@ -69,16 +65,12 @@
             margin-bottom: 12px;
             text-align: center;
         }
-
-        /* 主应用容器 */
         .app-root {
             display: flex;
             flex-direction: column;
             height: 100%;
             width: 100%;
         }
-
-        /* 顶部导航栏 */
         .top-nav {
             background: white;
             border-bottom: 1px solid #eef2f6;
@@ -115,15 +107,11 @@
             color: white;
             cursor: pointer;
         }
-
-        /* 主内容区 */
         .main-content {
             flex: 1;
             overflow: hidden;
             position: relative;
         }
-
-        /* 聊天布局 - 左右分栏，高度 100% */
         .chat-layout {
             display: flex;
             height: 100%;
@@ -179,8 +167,6 @@
         .contact-name {
             font-weight: 500;
         }
-
-        /* 右侧聊天区域 */
         .chat-area {
             flex: 1;
             display: flex;
@@ -244,8 +230,6 @@
             color: white;
             cursor: pointer;
         }
-
-        /* 其他页面卡片样式 - 管理面板滚动修复 */
         .card {
             background: white;
             border-radius: 16px;
@@ -253,7 +237,6 @@
             margin: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        /* 确保管理面板的表格容器可以滚动 */
         .table-wrapper {
             max-height: 400px;
             overflow-y: auto;
@@ -336,7 +319,6 @@
     let currentChatUser = null;
     let messagesSubscription = null;
 
-    // ---------- 工具函数 ----------
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
@@ -345,7 +327,6 @@
         return name ? name.charAt(0).toUpperCase() : '?';
     }
 
-    // ---------- 数据库操作 ----------
     async function ensureProfile(user, username) {
         const { error } = await _supabase
             .from('public_profiles')
@@ -382,7 +363,7 @@
         throw new Error('无法获取用户资料');
     }
 
-    // ---------- 认证界面 ----------
+    // 认证界面
     function renderAuth() {
         return `
             <div class="auth-page">
@@ -437,7 +418,8 @@
                     errorDiv.innerText = '登录失败，请刷新重试';
                 }
             } else {
-                const { data: existing } = await _supabase
+                // 注册：先检查用户名是否存在（避免数据库唯一冲突）
+                const { data: existing, error: checkErr } = await _supabase
                     .from('public_profiles')
                     .select('id')
                     .eq('display_name', username)
@@ -446,23 +428,34 @@
                     errorDiv.innerText = '用户名已被占用';
                     return;
                 }
-                const randomEmail = crypto.randomUUID() + EMAIL_SUFFIX;
-                const { data, error } = await _supabase.auth.signUp({ email: randomEmail, password });
-                if (error) {
-                    errorDiv.innerText = error.message;
-                    return;
-                }
-                if (data.user) {
-                    currentUser = data.user;
-                    await ensureProfile(currentUser, username);
-                    try {
-                        currentProfile = await fetchCurrentProfile();
-                        renderApp();
-                    } catch (err) {
-                        errorDiv.innerText = '注册成功，但加载失败，请刷新';
+                // 禁用按钮防止重复提交
+                const originalText = submit.innerText;
+                submit.disabled = true;
+                submit.innerText = '注册中...';
+                try {
+                    const randomEmail = crypto.randomUUID() + EMAIL_SUFFIX;
+                    const { data, error } = await _supabase.auth.signUp({ email: randomEmail, password });
+                    if (error) {
+                        errorDiv.innerText = error.message;
+                        return;
                     }
-                } else {
-                    errorDiv.innerText = '注册失败';
+                    if (data.user) {
+                        currentUser = data.user;
+                        await ensureProfile(currentUser, username);
+                        try {
+                            currentProfile = await fetchCurrentProfile();
+                            renderApp();
+                        } catch (err) {
+                            errorDiv.innerText = '注册成功但加载失败，请刷新';
+                        }
+                    } else {
+                        errorDiv.innerText = '注册失败';
+                    }
+                } catch (err) {
+                    errorDiv.innerText = err.message;
+                } finally {
+                    submit.disabled = false;
+                    submit.innerText = originalText;
                 }
             }
         }
@@ -475,7 +468,7 @@
         };
     }
 
-    // ---------- 主应用渲染 ----------
+    // 主应用渲染
     async function renderApp() {
         if (!currentProfile) {
             try {
@@ -509,7 +502,7 @@
 
         let mainHtml = '';
         if (currentView === 'home') mainHtml = await renderHome();
-        else if (currentView === 'chat') mainHtml = await renderChatView();
+        else if (currentView === 'chat') mainHtml = renderChatView();
         else if (currentView === 'friends') mainHtml = await renderFriends();
         else if (currentView === 'profile') mainHtml = await renderMyProfile();
         else if (currentView === 'settings') mainHtml = renderSettings();
@@ -517,7 +510,6 @@
 
         document.getElementById('root').innerHTML = `<div class="app-root">${topNavHtml}<div class="main-content">${mainHtml}</div></div>`;
 
-        // 导航切换
         document.querySelectorAll('.nav-item').forEach(el => {
             el.addEventListener('click', () => {
                 currentView = el.dataset.view;
@@ -534,7 +526,6 @@
             renderRoot();
         };
 
-        // 子页面事件
         if (currentView === 'chat') {
             attachChatEvents();
             subscribeMessages();
@@ -543,7 +534,7 @@
         else if (currentView === 'admin' && currentProfile.is_admin) attachAdminEvents();
     }
 
-    // ---------- 聊天视图 ----------
+    // 聊天视图
     function renderChatView() {
         return `
             <div class="chat-layout">
@@ -559,7 +550,6 @@
     }
 
     async function loadContactsAndChat() {
-        // 获取好友列表
         const { data: friendships } = await _supabase
             .from('friendships')
             .select('user_id, friend_id')
@@ -591,7 +581,6 @@
             `).join('') || '<div style="padding:20px;text-align:center;">暂无好友，请去“好友”页面添加</div>';
         }
 
-        // 绑定点击事件
         document.querySelectorAll('.contact-item').forEach(el => {
             el.addEventListener('click', async () => {
                 const userId = el.dataset.userId;
@@ -687,14 +676,14 @@
             .subscribe();
     }
 
-    // ---------- 主页 ----------
+    // 主页
     async function renderHome() {
         const { data: ann } = await _supabase.from('announcements').select('content').order('created_at', { ascending: false }).limit(1);
         const announcement = ann?.[0]?.content || '欢迎使用 JChat！';
         return `<div class="card"><h3>📢 公告</h3><p>${escapeHtml(announcement)}</p></div>`;
     }
 
-    // ---------- 好友页面 ----------
+    // 好友页面
     async function renderFriends() {
         const { data: requests } = await _supabase.from('friendships').select('id, user_id').eq('friend_id', currentUser.id).eq('status', 'pending');
         let requestUsers = [];
@@ -759,7 +748,7 @@
         }
     }
 
-    // ---------- 我的主页 ----------
+    // 我的主页
     async function renderMyProfile() {
         return `
             <div class="card">
@@ -777,7 +766,7 @@
         `;
     }
 
-    // ---------- 设置 ----------
+    // 设置
     function renderSettings() {
         return `
             <div class="card"><h3>更改昵称</h3><input id="new-name" value="${escapeHtml(currentProfile.display_name)}"><button id="update-name">保存</button></div>
@@ -842,7 +831,7 @@
         });
     }
 
-    // ---------- 管理面板（带滚动表格） ----------
+    // 管理面板（带滚动表格）
     async function renderAdmin() {
         const { data: users } = await _supabase.from('public_profiles').select('*').is('deleted_at', null);
         const { data: ann } = await _supabase.from('announcements').select('content').order('created_at', { ascending: false }).limit(1);
@@ -862,7 +851,7 @@
                                     <td>${u.is_admin ? '是' : `<button class="set-admin" data-id="${u.id}">设为管理员</button>`}</td>
                                     <td>${u.is_muted ? '已禁言' : `<button class="toggle-mute" data-id="${u.id}">禁言</button>`}</td>
                                     <td><button class="admin-del" data-id="${u.id}">删除</button></td>
-                                </tr>
+                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
@@ -931,7 +920,7 @@
         });
     }
 
-    // ---------- 根路由 ----------
+    // 根路由
     async function renderRoot() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (session?.user) {
