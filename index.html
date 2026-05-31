@@ -218,7 +218,13 @@
         .bottom-icon {
             font-size: 22px;
         }
-        /* 共用内容样式 */
+        /* 公用内容样式 - 关键修复 */
+        .pc-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
         .main-content-card {
             background: white;
             border-radius: 16px;
@@ -260,8 +266,9 @@
         .notification-item:hover {
             background: #f9fafb;
         }
-        /* 聊天布局 - 修复输入框固定在底部 */
+        /* 聊天布局 - 确保输入框在底部 */
         .chat-layout {
+            flex: 1;
             display: flex;
             height: 100%;
             width: 100%;
@@ -335,7 +342,7 @@
         .contact-name {
             font-weight: 500;
         }
-        /* 右侧聊天区域 - 使用 flex 列，输入框自动贴底 */
+        /* 右侧聊天区域 - 高度自动填满，输入框在底部 */
         .chat-area {
             flex: 1;
             display: flex;
@@ -507,7 +514,7 @@
     let currentChatUser = null;
     let messagesSubscription = null;
     let isMobile = window.innerWidth <= 768;
-    let unreadCounts = new Map(); // 本地缓存未读数
+    let unreadCounts = new Map();
 
     window.addEventListener('resize', () => {
         const newIsMobile = window.innerWidth <= 768;
@@ -525,7 +532,7 @@
         return name ? name.charAt(0).toUpperCase() : '?';
     }
 
-    // 加载当前用户的所有未读计数
+    // 加载未读计数
     async function loadUnreadCounts() {
         const { data, error } = await _supabase
             .from('unread_messages')
@@ -537,12 +544,9 @@
         }
     }
 
-    // 清除与某人的未读计数
     async function clearUnreadForUser(fromUserId) {
         const { error } = await _supabase.rpc('clear_unread_count', { p_from_user_id: fromUserId });
-        if (!error) {
-            unreadCounts.set(fromUserId, 0);
-        }
+        if (!error) unreadCounts.set(fromUserId, 0);
     }
 
     async function ensureProfile(user, username) {
@@ -581,7 +585,7 @@
         throw new Error('无法获取用户资料');
     }
 
-    // 获取通知列表（未读消息摘要）
+    // 获取通知
     async function getNotifications() {
         const { data: unreads } = await _supabase
             .from('unread_messages')
@@ -865,7 +869,6 @@
             if (contactList) contactList.innerHTML = '<div style="padding:20px;text-align:center;">暂无好友，请去“好友”页面添加</div>';
             return;
         }
-        // 获取好友资料
         const { data: friends } = await _supabase
             .from('public_profiles')
             .select('id, display_name')
@@ -885,7 +888,6 @@
         }));
         const lastTimeMap = new Map(lastMessages.map(l => [l.friendId, l.lastTime]));
 
-        // 排序：有最后消息的按时间倒序，无消息的按用户名
         const sortedFriends = [...friends].sort((a, b) => {
             const timeA = lastTimeMap.get(a.id) || '';
             const timeB = lastTimeMap.get(b.id) || '';
@@ -914,17 +916,15 @@
             }).join('');
         }
 
-        // 绑定点击事件
         document.querySelectorAll('.contact-item').forEach(el => {
             el.addEventListener('click', async () => {
                 const userId = el.dataset.userId;
                 const name = el.dataset.name;
                 currentChatUser = { id: userId, display_name: name };
-                // 清除未读计数
                 if (unreadCounts.get(userId) > 0) {
                     await clearUnreadForUser(userId);
                     await loadUnreadCounts();
-                    await loadContactsAndChat(); // 刷新好友列表以更新红点
+                    await loadContactsAndChat();
                 }
                 await loadMessagesAndRenderChat();
                 document.querySelectorAll('.contact-item').forEach(c => c.classList.remove('active'));
@@ -1002,11 +1002,8 @@
         messagesSubscription = _supabase
             .channel('new-msg')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `to_user_id=eq.${currentUser.id}` }, async payload => {
-                // 更新未读计数
                 await loadUnreadCounts();
-                // 刷新好友列表（更新小红点和排序）
                 await loadContactsAndChat();
-                // 如果当前正在和发送者聊天，直接显示消息
                 if (currentChatUser && payload.new.from_user_id === currentChatUser.id) {
                     const container = document.getElementById('messages-container');
                     if (container) {
@@ -1023,13 +1020,11 @@
 
     // 电脑版渲染（含用户下拉菜单）
     async function renderPc() {
-        // 顶部导航只显示三个主菜单
         const navItems = [
             { id: 'home', label: '主页' },
             { id: 'chat', label: '聊天' },
             { id: 'friends', label: '好友' }
         ];
-        // 下拉菜单项目
         const dropdownItems = [
             { id: 'profile', label: '😀 我的主页' },
             { id: 'settings', label: '⚙️ 设置' }
@@ -1101,7 +1096,6 @@
             };
         }
 
-        // 顶部导航事件
         document.querySelectorAll('.pc-nav-item').forEach(el => {
             el.addEventListener('click', () => {
                 currentView = el.dataset.view;
@@ -1119,7 +1113,7 @@
         else if (currentView === 'admin' && currentProfile.is_admin) attachAdminEvents();
     }
 
-    // 手机版渲染（底部导航，用户菜单放到顶部右侧）
+    // 手机版渲染（底部导航）
     async function renderMobile() {
         const bottomNavItems = [
             { id: 'home', icon: '🏠', label: '主页' },
@@ -1169,7 +1163,6 @@
         `;
         document.getElementById('root').innerHTML = fullHtml;
 
-        // 手机版下拉菜单
         const trigger = document.getElementById('mobile-user-trigger');
         const menu = document.getElementById('mobile-dropdown-menu');
         if (trigger && menu) {
@@ -1316,7 +1309,6 @@
         const selectAll = document.getElementById('select-all');
         if (selectAll) selectAll.onchange = (e) => document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = e.target.checked);
         const getSelected = () => Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => cb.value).filter(id => id !== currentUser.id);
-        const batch = (ids, action) => action(ids);
         document.getElementById('batch-set-admin')?.addEventListener('click', async () => {
             const ids = getSelected();
             if (!ids.length) return alert('请选择用户');
@@ -1408,7 +1400,6 @@
         } else {
             await renderPc();
         }
-        // 绑定主页通知栏点击跳转
         if (currentView === 'home') {
             document.querySelectorAll('.notification-item').forEach(el => {
                 el.addEventListener('click', () => {
