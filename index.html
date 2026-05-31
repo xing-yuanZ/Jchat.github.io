@@ -479,6 +479,21 @@
             background: #005fc1;
             transform: scale(1.03);
         }
+        /* 管理面板滚动修复 */
+        .card-with-scroll {
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 180px); /* 减去顶部栏和边距 */
+            overflow: hidden;
+        }
+        .table-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 12px;
+            border: 1px solid #eef2f6;
+            border-radius: 12px;
+            min-height: 200px; /* 确保有最小高度，避免折叠 */
+        }
         /* 其他样式 */
         .friend-item {
             display: flex;
@@ -535,13 +550,6 @@
             box-shadow: 0 0 0 2px rgba(0,122,255,0.2);
             outline: none;
         }
-        .table-wrapper {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-top: 12px;
-            border: 1px solid #eef2f6;
-            border-radius: 12px;
-        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -555,6 +563,7 @@
             background: #f9fafb;
             position: sticky;
             top: 0;
+            z-index: 10;
         }
         .batch-bar {
             display: flex;
@@ -579,6 +588,9 @@
             }
             .chat-area {
                 height: calc(100% - 200px);
+            }
+            .card-with-scroll {
+                max-height: calc(100vh - 140px);
             }
         }
     </style>
@@ -885,8 +897,12 @@
         const { data: ann } = await _supabase.from('announcements').select('content').order('created_at', { ascending: false }).limit(1);
         const currentAnn = ann?.[0]?.content || '';
         return `
-            <div class="main-content-card"><h3>编辑公告</h3><textarea id="admin-announcement" rows="2">${escapeHtml(currentAnn)}</textarea><button id="save-announcement">保存公告</button></div>
-            <div class="main-content-card">
+            <div class="main-content-card card-with-scroll">
+                <h3>编辑公告</h3>
+                <textarea id="admin-announcement" rows="2">${escapeHtml(currentAnn)}</textarea>
+                <button id="save-announcement">保存公告</button>
+            </div>
+            <div class="main-content-card card-with-scroll">
                 <h3>用户管理</h3>
                 <div class="batch-bar">
                     <span>批量操作：</span>
@@ -899,7 +915,9 @@
                 </div>
                 <div class="table-wrapper">
                     <table>
-                        <thead><tr><th class="checkbox-col"></th><th>用户名</th><th>管理员</th><th>禁言</th><th>操作</th></tr></thead>
+                        <thead>
+                            <tr><th class="checkbox-col"></th><th>用户名</th><th>管理员</th><th>禁言</th><th>操作</th></tr>
+                        </thead>
                         <tbody id="admin-user-table">
                             ${users?.map(u => `
                                 <tr data-user-id="${u.id}">
