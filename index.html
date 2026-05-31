@@ -3,50 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>JChat - 电脑版</title>
+    <title>JChat - 最终版</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 基础重置和高度控制 */
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
-        html, body, #root {
-            height: 100%;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body, #root {
+            height: 100%;
             overflow: hidden;
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: #f5f7fb;
         }
+
+        /* 登录页 */
         .auth-page {
             height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
         }
         .auth-card {
             background: white;
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 32px;
-            width: 360px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            width: 340px;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
         }
         .auth-card h2 {
             text-align: center;
             margin-bottom: 24px;
-            font-size: 28px;
-            font-weight: 600;
         }
         .auth-card input {
             width: 100%;
             padding: 12px;
             margin-bottom: 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
         }
         .auth-card button {
             width: 100%;
@@ -54,50 +54,48 @@
             background: #007aff;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
+            border-radius: 30px;
             cursor: pointer;
+            font-weight: bold;
         }
         .auth-switch {
             text-align: center;
             margin-top: 16px;
             color: #007aff;
             cursor: pointer;
-            font-size: 14px;
         }
         .error-msg {
             color: #e53e3e;
-            font-size: 13px;
+            margin-bottom: 12px;
             text-align: center;
-            margin-bottom: 16px;
         }
+
         /* 主应用容器 */
         .app-root {
             display: flex;
             flex-direction: column;
             height: 100%;
             width: 100%;
-            overflow: hidden;
         }
+
+        /* 顶部导航栏 */
         .top-nav {
             background: white;
             border-bottom: 1px solid #eef2f6;
-            padding: 0 24px;
+            padding: 0 20px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             overflow-x: auto;
             flex-shrink: 0;
         }
         .nav-item {
-            padding: 16px 20px;
-            font-size: 16px;
+            padding: 16px 16px;
+            font-size: 15px;
             font-weight: 500;
             color: #5b677b;
             cursor: pointer;
             border-bottom: 2px solid transparent;
-            white-space: nowrap;
         }
         .nav-item.active {
             color: #007aff;
@@ -113,34 +111,33 @@
             background: #ef4444;
             border: none;
             padding: 6px 14px;
-            border-radius: 8px;
+            border-radius: 20px;
             color: white;
             cursor: pointer;
         }
+
+        /* 主内容区 */
         .main-content {
             flex: 1;
             overflow: hidden;
-            background: #fff;
-            display: flex;
-            flex-direction: column;
+            position: relative;
         }
-        /* 聊天布局 - Grid 固定左右 */
+
+        /* 聊天布局 - 左右分栏，高度 100% */
         .chat-layout {
-            display: grid;
-            grid-template-columns: 280px 1fr;
+            display: flex;
             height: 100%;
             width: 100%;
-            overflow: hidden;
         }
-        .chat-sidebar {
+        .sidebar {
+            width: 280px;
             background: #f9fafb;
             border-right: 1px solid #eef2f6;
             display: flex;
             flex-direction: column;
             height: 100%;
-            overflow: hidden;
         }
-        .chat-sidebar-header {
+        .sidebar-header {
             padding: 16px 20px;
             background: white;
             border-bottom: 1px solid #eef2f6;
@@ -175,21 +172,20 @@
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 16px;
-            flex-shrink: 0;
         }
         .contact-info {
             flex: 1;
         }
         .contact-name {
             font-weight: 500;
-            font-size: 15px;
         }
-        /* 右侧聊天区域 - 采用 flex 布局，高度 100% */
+
+        /* 右侧聊天区域 */
         .chat-area {
-            background: white;
+            flex: 1;
             display: flex;
             flex-direction: column;
+            background: white;
             height: 100%;
             overflow: hidden;
         }
@@ -211,8 +207,8 @@
         }
         .message {
             max-width: 70%;
-            padding: 8px 12px;
-            border-radius: 12px;
+            padding: 8px 14px;
+            border-radius: 18px;
             font-size: 14px;
             word-wrap: break-word;
         }
@@ -224,7 +220,6 @@
         .message.received {
             align-self: flex-start;
             background: #f1f3f4;
-            color: #1f2937;
         }
         .input-area {
             padding: 16px 24px;
@@ -237,25 +232,48 @@
         #chat-input {
             flex: 1;
             padding: 10px 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 20px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
             outline: none;
         }
         #chat-send {
             background: #007aff;
             border: none;
             padding: 8px 20px;
-            border-radius: 20px;
+            border-radius: 30px;
             color: white;
             cursor: pointer;
         }
-        /* 其他页面卡片样式 */
+
+        /* 其他页面卡片样式 - 管理面板滚动修复 */
         .card {
             background: white;
             border-radius: 16px;
             padding: 20px;
             margin: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        /* 确保管理面板的表格容器可以滚动 */
+        .table-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 12px;
+            border: 1px solid #eef2f6;
+            border-radius: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eef2f6;
+        }
+        th {
+            background: #f9fafb;
+            position: sticky;
+            top: 0;
         }
         button {
             background: #007aff;
@@ -271,22 +289,13 @@
         input, textarea {
             width: 100%;
             padding: 10px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #ddd;
             border-radius: 8px;
             margin-bottom: 12px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #eef2f6;
-        }
         .profile-header {
             display: flex;
-            gap: 24px;
+            gap: 20px;
             align-items: center;
         }
         .profile-avatar-lg {
@@ -313,10 +322,10 @@
 <div id="root"></div>
 
 <script>
-    // ==================== Supabase 配置 ====================
+    // ==================== 你的 Supabase 配置 ====================
     const SUPABASE_URL = 'https://cxilodvbdhtxtrldoswl.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_36lHK24HL6drOmuhSTTv8g_w2n0fU5H';
-    // ======================================================
+    // =======================================================
 
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const EMAIL_SUFFIX = '@jchat.local';
@@ -325,17 +334,18 @@
     let currentProfile = null;
     let currentView = 'home';
     let currentChatUser = null;
-    let messagesSub = null;
+    let messagesSubscription = null;
 
+    // ---------- 工具函数 ----------
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
-
     function getInitial(name) {
         return name ? name.charAt(0).toUpperCase() : '?';
     }
 
+    // ---------- 数据库操作 ----------
     async function ensureProfile(user, username) {
         const { error } = await _supabase
             .from('public_profiles')
@@ -348,11 +358,10 @@
                 bio: '',
                 deleted_at: null
             }, { onConflict: 'id', ignoreDuplicates: true });
-        if (error && error.code !== '23505') console.warn('ensureProfile:', error);
+        if (error && error.code !== '23505') console.warn('ensureProfile error', error);
     }
 
-    async function fetchCurrentProfile(retries = 10, delay = 500) {
-        if (!currentUser) throw new Error('No current user');
+    async function fetchCurrentProfile(retries = 5, delay = 500) {
         for (let i = 0; i < retries; i++) {
             const { data, error } = await _supabase
                 .from('public_profiles')
@@ -360,7 +369,6 @@
                 .eq('id', currentUser.id)
                 .maybeSingle();
             if (error) {
-                console.warn(`fetchProfile retry ${i+1}:`, error);
                 await new Promise(r => setTimeout(r, delay));
                 continue;
             }
@@ -374,7 +382,7 @@
         throw new Error('无法获取用户资料');
     }
 
-    // ========== 认证界面 ==========
+    // ---------- 认证界面 ----------
     function renderAuth() {
         return `
             <div class="auth-page">
@@ -410,9 +418,15 @@
                     .select('email')
                     .eq('display_name', username)
                     .maybeSingle();
-                if (!profile) { errorDiv.innerText = '用户名不存在'; return; }
+                if (!profile) {
+                    errorDiv.innerText = '用户名不存在';
+                    return;
+                }
                 const { error } = await _supabase.auth.signInWithPassword({ email: profile.email, password });
-                if (error) { errorDiv.innerText = error.message; return; }
+                if (error) {
+                    errorDiv.innerText = error.message;
+                    return;
+                }
                 const { data: { user } } = await _supabase.auth.getUser();
                 currentUser = user;
                 try {
@@ -420,7 +434,7 @@
                     currentProfile = await fetchCurrentProfile();
                     renderApp();
                 } catch (err) {
-                    errorDiv.innerText = '登录失败: ' + err.message;
+                    errorDiv.innerText = '登录失败，请刷新重试';
                 }
             } else {
                 const { data: existing } = await _supabase
@@ -428,10 +442,16 @@
                     .select('id')
                     .eq('display_name', username)
                     .maybeSingle();
-                if (existing) { errorDiv.innerText = '用户名已存在'; return; }
+                if (existing) {
+                    errorDiv.innerText = '用户名已被占用';
+                    return;
+                }
                 const randomEmail = crypto.randomUUID() + EMAIL_SUFFIX;
                 const { data, error } = await _supabase.auth.signUp({ email: randomEmail, password });
-                if (error) { errorDiv.innerText = error.message; return; }
+                if (error) {
+                    errorDiv.innerText = error.message;
+                    return;
+                }
                 if (data.user) {
                     currentUser = data.user;
                     await ensureProfile(currentUser, username);
@@ -439,7 +459,7 @@
                         currentProfile = await fetchCurrentProfile();
                         renderApp();
                     } catch (err) {
-                        errorDiv.innerText = '注册成功但加载失败，请刷新';
+                        errorDiv.innerText = '注册成功，但加载失败，请刷新';
                     }
                 } else {
                     errorDiv.innerText = '注册失败';
@@ -455,7 +475,7 @@
         };
     }
 
-    // ========== 渲染主应用 ==========
+    // ---------- 主应用渲染 ----------
     async function renderApp() {
         if (!currentProfile) {
             try {
@@ -497,11 +517,12 @@
 
         document.getElementById('root').innerHTML = `<div class="app-root">${topNavHtml}<div class="main-content">${mainHtml}</div></div>`;
 
+        // 导航切换
         document.querySelectorAll('.nav-item').forEach(el => {
             el.addEventListener('click', () => {
                 currentView = el.dataset.view;
                 currentChatUser = null;
-                if (messagesSub) messagesSub.unsubscribe();
+                if (messagesSubscription) messagesSubscription.unsubscribe();
                 renderApp();
             });
         });
@@ -509,40 +530,36 @@
             await _supabase.auth.signOut();
             currentUser = null;
             currentProfile = null;
-            if (messagesSub) messagesSub.unsubscribe();
+            if (messagesSubscription) messagesSubscription.unsubscribe();
             renderRoot();
         };
 
+        // 子页面事件
         if (currentView === 'chat') {
             attachChatEvents();
             subscribeMessages();
-        } else if (currentView === 'friends') {
-            attachFriendEvents();
-        } else if (currentView === 'settings') {
-            attachSettingsEvents();
-        } else if (currentView === 'admin' && currentProfile.is_admin) {
-            attachAdminEvents();
-        }
+        } else if (currentView === 'friends') attachFriendEvents();
+        else if (currentView === 'settings') attachSettingsEvents();
+        else if (currentView === 'admin' && currentProfile.is_admin) attachAdminEvents();
     }
 
-    // ========== 聊天视图（结构不变，只替换右侧内容） ==========
-    async function renderChatView() {
+    // ---------- 聊天视图 ----------
+    function renderChatView() {
         return `
             <div class="chat-layout">
-                <div class="chat-sidebar">
-                    <div class="chat-sidebar-header">好友列表</div>
+                <div class="sidebar">
+                    <div class="sidebar-header">好友列表</div>
                     <div class="contact-list" id="contact-list"></div>
                 </div>
                 <div class="chat-area" id="chat-area">
-                    <!-- 默认占位符，之后会替换为带 header、messages-container、input-area 的结构 -->
-                    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">选择一个好友开始聊天</div>
+                    <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#aaa;">选择一个好友开始聊天</div>
                 </div>
             </div>
         `;
     }
 
     async function loadContactsAndChat() {
-        // 加载好友列表
+        // 获取好友列表
         const { data: friendships } = await _supabase
             .from('friendships')
             .select('user_id, friend_id')
@@ -580,56 +597,31 @@
                 const userId = el.dataset.userId;
                 const name = el.dataset.name;
                 currentChatUser = { id: userId, display_name: name };
-                await renderChatAreaContent();
+                await loadMessagesAndRenderChat();
                 document.querySelectorAll('.contact-item').forEach(c => c.classList.remove('active'));
                 el.classList.add('active');
             });
         });
 
-        // 如果已有当前聊天对象，直接渲染内容
         if (currentChatUser) {
             const activeEl = Array.from(document.querySelectorAll('.contact-item')).find(el => el.dataset.userId === currentChatUser.id);
             if (activeEl) activeEl.classList.add('active');
-            await renderChatAreaContent();
-        } else {
-            const chatArea = document.getElementById('chat-area');
-            if (chatArea) {
-                chatArea.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">选择一个好友开始聊天</div>';
-            }
+            await loadMessagesAndRenderChat();
         }
-
-        // 实时消息订阅
-        if (messagesSub) messagesSub.unsubscribe();
-        messagesSub = _supabase
-            .channel('new-msg')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `to_user_id=eq.${currentUser.id}` }, payload => {
-                if (currentChatUser && payload.new.from_user_id === currentChatUser.id) {
-                    const container = document.getElementById('messages-container');
-                    if (container) {
-                        const div = document.createElement('div');
-                        div.className = 'message received';
-                        div.innerText = payload.new.content;
-                        container.appendChild(div);
-                        container.scrollTop = container.scrollHeight;
-                    }
-                }
-            })
-            .subscribe();
     }
 
-    // 重点：动态替换右侧区域内容时，必须保证 .chat-area 内部仍然是 flex 结构，而不是被完全替换成普通 div
-    async function renderChatAreaContent() {
+    async function loadMessagesAndRenderChat() {
         if (!currentChatUser) return;
         const { data: messages } = await _supabase
             .from('messages')
             .select('*')
             .or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${currentChatUser.id}),and(from_user_id.eq.${currentChatUser.id},to_user_id.eq.${currentUser.id})`)
             .order('created_at', { ascending: true });
+
         const msgsHtml = messages?.map(m => `
             <div class="message ${m.from_user_id === currentUser.id ? 'sent' : 'received'}">${escapeHtml(m.content)}</div>
-        `).join('') || '<div style="text-align:center;color:#999;">暂无消息</div>';
-        
-        // 构建完整的聊天区域内部结构（包含 header, messages-container, input-area）
+        `).join('') || '<div style="text-align:center;color:#aaa;">暂无消息</div>';
+
         const chatAreaHtml = `
             <div class="chat-header">${escapeHtml(currentChatUser.display_name)}</div>
             <div class="messages-container" id="messages-container">${msgsHtml}</div>
@@ -640,14 +632,11 @@
         `;
         const chatArea = document.getElementById('chat-area');
         if (chatArea) {
-            // 替换内部内容，但保留 .chat-area 本身的类名和样式
             chatArea.innerHTML = chatAreaHtml;
-            // 滚动到底部
             const container = document.getElementById('messages-container');
             if (container) container.scrollTop = container.scrollHeight;
         }
 
-        // 绑定发送事件
         const sendBtn = document.getElementById('chat-send');
         const input = document.getElementById('chat-input');
         if (sendBtn && input) {
@@ -676,20 +665,36 @@
     }
 
     function attachChatEvents() {
-        setTimeout(() => {
-            loadContactsAndChat();
-        }, 100);
+        setTimeout(() => loadContactsAndChat(), 100);
     }
 
-    function subscribeMessages() { }
+    function subscribeMessages() {
+        if (messagesSubscription) messagesSubscription.unsubscribe();
+        messagesSubscription = _supabase
+            .channel('new-msg')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `to_user_id=eq.${currentUser.id}` }, payload => {
+                if (currentChatUser && payload.new.from_user_id === currentChatUser.id) {
+                    const container = document.getElementById('messages-container');
+                    if (container) {
+                        const div = document.createElement('div');
+                        div.className = 'message received';
+                        div.innerText = payload.new.content;
+                        container.appendChild(div);
+                        container.scrollTop = container.scrollHeight;
+                    }
+                }
+            })
+            .subscribe();
+    }
 
-    // ========== 其他页面函数（与之前一致，确保完整） ==========
+    // ---------- 主页 ----------
     async function renderHome() {
         const { data: ann } = await _supabase.from('announcements').select('content').order('created_at', { ascending: false }).limit(1);
         const announcement = ann?.[0]?.content || '欢迎使用 JChat！';
         return `<div class="card"><h3>📢 公告</h3><p>${escapeHtml(announcement)}</p></div>`;
     }
 
+    // ---------- 好友页面 ----------
     async function renderFriends() {
         const { data: requests } = await _supabase.from('friendships').select('id, user_id').eq('friend_id', currentUser.id).eq('status', 'pending');
         let requestUsers = [];
@@ -754,6 +759,7 @@
         }
     }
 
+    // ---------- 我的主页 ----------
     async function renderMyProfile() {
         return `
             <div class="card">
@@ -771,6 +777,7 @@
         `;
     }
 
+    // ---------- 设置 ----------
     function renderSettings() {
         return `
             <div class="card"><h3>更改昵称</h3><input id="new-name" value="${escapeHtml(currentProfile.display_name)}"><button id="update-name">保存</button></div>
@@ -801,7 +808,7 @@
                 await _supabase.auth.signOut();
                 currentUser = null;
                 currentProfile = null;
-                if (messagesSub) messagesSub.unsubscribe();
+                if (messagesSubscription) messagesSubscription.unsubscribe();
                 renderRoot();
             }
         });
@@ -835,21 +842,32 @@
         });
     }
 
+    // ---------- 管理面板（带滚动表格） ----------
     async function renderAdmin() {
         const { data: users } = await _supabase.from('public_profiles').select('*').is('deleted_at', null);
         const { data: ann } = await _supabase.from('announcements').select('content').order('created_at', { ascending: false }).limit(1);
         const currentAnn = ann?.[0]?.content || '';
         return `
             <div class="card"><h3>编辑公告</h3><textarea id="admin-announcement" rows="2">${escapeHtml(currentAnn)}</textarea><button id="save-announcement">保存公告</button></div>
-            <div class="card"><h3>用户管理</h3><table style="width:100%"><tr><th>用户名</th><th>管理员</th><th>禁言</th><th>操作</th></tr>
-            ${users?.map(u => `
-                <tr>
-                    <td>${escapeHtml(u.display_name)}</td>
-                    <td>${u.is_admin ? '是' : `<button class="set-admin" data-id="${u.id}">设为管理员</button>`}</td>
-                    <td>${u.is_muted ? '已禁言' : `<button class="toggle-mute" data-id="${u.id}">禁言</button>`}</td>
-                    <td><button class="admin-del" data-id="${u.id}">删除</button></td>
-                </tr>
-            `).join('')}</table></div>
+            <div class="card"><h3>用户管理</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr><th>用户名</th><th>管理员</th><th>禁言</th><th>操作</th></tr>
+                        </thead>
+                        <tbody>
+                            ${users?.map(u => `
+                                <tr>
+                                    <td>${escapeHtml(u.display_name)}</td>
+                                    <td>${u.is_admin ? '是' : `<button class="set-admin" data-id="${u.id}">设为管理员</button>`}</td>
+                                    <td>${u.is_muted ? '已禁言' : `<button class="toggle-mute" data-id="${u.id}">禁言</button>`}</td>
+                                    <td><button class="admin-del" data-id="${u.id}">删除</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             <div class="card"><h3>创建新用户</h3><input id="new-admin-name" placeholder="用户名"><input id="new-admin-pwd" placeholder="密码"><button id="admin-create-user">创建</button></div>
         `;
     }
@@ -913,7 +931,7 @@
         });
     }
 
-    // ========== 根路由 ==========
+    // ---------- 根路由 ----------
     async function renderRoot() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (session?.user) {
@@ -924,7 +942,7 @@
                 renderApp();
             } catch (err) {
                 console.error(err);
-                document.getElementById('root').innerHTML = '<div style="text-align:center;padding:40px;">加载失败，请刷新页面</div>';
+                document.getElementById('root').innerHTML = '<div style="text-align:center;padding:40px;">加载失败，请刷新页面或重新登录</div>';
             }
         } else {
             document.getElementById('root').innerHTML = renderAuth();
